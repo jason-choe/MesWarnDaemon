@@ -134,14 +134,14 @@ namespace MesWarnDaemon
             isFirst = true;
             timer1.Start();
             if (dataBase2)
-                ClearAlarmHistoryOnPOST();
+                ClearAlarmHistoryOnPOST();  // Clear alarm history on App startup
         }
 
         void WaitRun()
         {
             for(int i = 0; i < 30; i++)
             {
-                Thread.Sleep(1000);
+                Thread.Sleep(1000);     // 1000ms * 30 = 30sec delay 후 Main Window 시작
             }
         }
 
@@ -178,6 +178,7 @@ namespace MesWarnDaemon
             Comm.Connection = conn2;
 
             string strRecord;
+            // Clear Server's DB alarm history
             strRecord = string.Format("UPDATE tb_AlarmHis SET cleared_at = GetDate() WHERE name = '{0}' AND cleared_at is NULL",
                 System.Configuration.ConfigurationManager.AppSettings["AmrName"]);
             Comm.CommandText = strRecord;
@@ -389,6 +390,9 @@ namespace MesWarnDaemon
 
         private void AddAlarm_Local(int errorType, int errorCode)
         {
+            // AMR local DB tbSingle_AlarmOccurred table 에 알람 발생 등록
+            // Rack/Bobbin AMR의 scrap 처리/공 bobbin 적재 시 광통신 error
+            // Spool/Product AMR의 이재, 적재 시 error
             conn.Close();
             conn.Open();
 
@@ -577,6 +581,7 @@ namespace MesWarnDaemon
                     }
                     else
                     {
+                        AddAlarm_Local(1, errCodes[0]);
                         if (dataBase2) 
                             LocateErrId = AddAlarm_Monitor(1, errCodes[0]);
                         WriteLog("[" + DateTimeOffset.Now.ToString() + "] *** [Error] Location error " + errCodes[0].ToString() + " occurred.");
@@ -594,6 +599,7 @@ namespace MesWarnDaemon
                     }
                     else
                     {
+                        AddAlarm_Local(2, errCodes[2]);
                         if (dataBase2) 
                             NaviErrId = AddAlarm_Monitor(2, errCodes[2]);
                         WriteLog("[" + DateTimeOffset.Now.ToString() + "] *** [Error] Navigation error " + errCodes[2].ToString() + " occurred.");
@@ -611,6 +617,7 @@ namespace MesWarnDaemon
                     }
                     else
                     {
+                        AddAlarm_Local(3, errCodes[6]);
                         if (dataBase2) 
                             ChassisErrId = AddAlarm_Monitor(3, errCodes[6]);
                         WriteLog("[" + DateTimeOffset.Now.ToString() + "] *** [Error] Chassis error " + errCodes[6].ToString() + " occurred.");
@@ -628,6 +635,7 @@ namespace MesWarnDaemon
                     }
                     else
                     {
+                        AddAlarm_Local(4, errCodes[8]);
                         if (dataBase2) 
                             CmdErrId = AddAlarm_Monitor(4, errCodes[8]);
                         WriteLog("[" + DateTimeOffset.Now.ToString() + "] *** [Error] Command error " + errCodes[8].ToString() + " occurred.");
@@ -645,6 +653,7 @@ namespace MesWarnDaemon
                     }
                     else
                     {
+                        AddAlarm_Local(5, errCodes[4]);
                         if (dataBase2) 
                             LaserErrId = AddAlarm_Monitor(5, errCodes[4]);
                         WriteLog("[" + DateTimeOffset.Now.ToString() + "] *** [Error] Laser error " + errCodes[4].ToString() + " occurred.");
@@ -730,7 +739,7 @@ namespace MesWarnDaemon
                     checkBox7.Checked = blockedStatus[0];   // Stop by front protection
                     checkBox10.Checked = blockedStatus[7];   // loaded
 
-                    if(dataBase2) 
+                    if (dataBase2) 
                         UpdateBlockedStatus_Monitor(blockedStatus);
 
                     if (dataBase)
@@ -742,6 +751,7 @@ namespace MesWarnDaemon
                         if (blockedStatus[0] && !oldBlocked[0])
                         {
                             WriteLog("[" + DateTimeOffset.Now.ToString() + "] *** [Stop] stopped by stopzone");
+                            AddAlarm_Local(15, 801);
                             if (dataBase2)
                                 stopZoneId = AddAlarm_Monitor(15, 801);
                         }
@@ -755,6 +765,7 @@ namespace MesWarnDaemon
                         if (blockedStatus[5] && !oldBlocked[5])
                         {
                             WriteLog("[" + DateTimeOffset.Now.ToString() + "] *** [Stop] stopped by bumper touch");
+                            AddAlarm_Local(15, 802);
                             if (dataBase2)
                                 bumperId = AddAlarm_Monitor(15, 802);
                         }
@@ -768,6 +779,7 @@ namespace MesWarnDaemon
                         if (blockedStatus[6] && !oldBlocked[6])
                         {
                             WriteLog("[" + DateTimeOffset.Now.ToString() + "] *** [Stop] stopped by pressing emergency button");
+                            AddAlarm_Local(15, 803);
                             if (dataBase2)
                                 emergencyId = AddAlarm_Monitor(15, 803);
                         }
