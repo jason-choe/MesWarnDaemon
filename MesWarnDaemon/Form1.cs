@@ -76,6 +76,7 @@ namespace MesWarnDaemon
         private int[] operationStatus = new int[2];
         private int[] oldStatus = new int[2] { 9, 0 };
         private bool[] blockedStatus = new bool[8];
+        private bool[] ioState = new bool[27];
         private bool[] oldBlocked = new bool[8] {false, false, false, false, false, false, false, false };
         private bool[] onlineStatus = new bool[3];
         private bool[] oldOnline = new bool[3] { false, false, false };
@@ -94,6 +95,7 @@ namespace MesWarnDaemon
         private int modbusAddr = int.Parse(System.Configuration.ConfigurationManager.AppSettings["WorkStateAddress"]);
         private int onlineAddr = int.Parse(System.Configuration.ConfigurationManager.AppSettings["OnlineStateAddress"]);
         private int blkAddr = int.Parse(System.Configuration.ConfigurationManager.AppSettings["BlockStateAddress"]);
+        private int ioStateAddr = int.Parse(System.Configuration.ConfigurationManager.AppSettings["IOStateAddress"]);
         private int amrId = int.Parse(System.Configuration.ConfigurationManager.AppSettings["AmrID"]);
         private string workingTaskId = "None";
         private bool dataBase = bool.Parse(System.Configuration.ConfigurationManager.AppSettings["DataBase"]);
@@ -369,6 +371,35 @@ namespace MesWarnDaemon
             Comm.CommandText = strRecord;
             Comm.ExecuteNonQuery();
 
+            conn.Close();
+        }
+
+        private void AddIOState_Local(bool[] ioState)
+        {
+            conn.Close();
+            conn.Open();
+            SqlCommand Comm = new SqlCommand();
+            Comm.Connection = conn;
+
+            string strRecord;
+
+            strRecord = string.Format("INSERT tb_IOState " +
+                "(updated_at,   rf_trigger_run, lc1_loaded,     lc2_loaded, touched,    emergencied,    uam_ossd1," +
+                " uam_ossd3,    fine_tuned,     lc_full,        cyl_upper,  cyl_lower,  brdg_upper,     brdg_lower," +
+                " di_13,        ir_rx2,         red_led,        blue_led,   brdg_fw,    brdg_bw,        charge_on, " +
+                " cyl_fw,       green_led,      rfid_trigger,   buzzer,     cyl_bw,     uam_in_a,       uam_in_b) " +
+                "VALUES (GetDate(), {0},  {1},  {2},  {3},  {4},  {5},  {6},  {7},  {8},  {9}, {10}, {11}, {12}, " +
+                "                  {13}, {14}, {15}, {16}, {17}, {18}, {19}, {20}, {21}, {22}, {23}, {24}, {25}, {26} ) ",
+                ioState[0] ? 1 : 0, ioState[1] ? 1 : 0, ioState[2] ? 1 : 0, ioState[3] ? 1 : 0, ioState[4] ? 1 : 0,
+                ioState[5] ? 1 : 0, ioState[6] ? 1 : 0, ioState[7] ? 1 : 0, ioState[8] ? 1 : 0, ioState[9] ? 1 : 0,
+                ioState[10] ? 1 : 0, ioState[11] ? 1 : 0, ioState[12] ? 1 : 0, ioState[13] ? 1 : 0, ioState[14] ? 1 : 0,
+                ioState[15] ? 1 : 0, ioState[16] ? 1 : 0, ioState[17] ? 1 : 0, ioState[18] ? 1 : 0, ioState[19] ? 1 : 0,
+                ioState[20] ? 1 : 0, ioState[21] ? 1 : 0, ioState[22] ? 1 : 0, ioState[23] ? 1 : 0, ioState[24] ? 1 : 0,
+                ioState[25] ? 1 : 0, ioState[26] ? 1 : 0);
+
+            Comm.CommandText = strRecord;
+
+            Comm.ExecuteNonQuery();
             conn.Close();
         }
 
@@ -717,6 +748,12 @@ namespace MesWarnDaemon
                 {
                     rackDetected = modbusClient.ReadDiscreteInputs(onlineAddr + 3, 1);  // address = 10043 (or 10017)
                     AddRackDetectStatus_Local(rackDetected);
+                }
+
+                if (firstLetter == 'B') // BOBBIN_AMR
+                {
+                    ioState = modbusClient.ReadDiscreteInputs(ioStateAddr, 27); // address = 10043
+                    AddIOState_Local(ioState);
                 }
 
                 // AMR block status
