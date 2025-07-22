@@ -6,6 +6,7 @@ using EasyModbus;
 using System.Threading;
 using System.Net.Sockets;
 using System.IO;
+using System.Windows;
 
 namespace MesWarnDaemon
 {
@@ -76,7 +77,7 @@ namespace MesWarnDaemon
         private int[] operationStatus = new int[2];
         private int[] oldStatus = new int[2] { 9, 0 };
         private bool[] blockedStatus = new bool[8];
-        private bool[] ioState = new bool[27];
+        private bool[] ioState = new bool[90]; // main 26 bits, sub 32 bits, sub2 32 bits -> Totl 90 bits
         private bool[] oldBlocked = new bool[8] {false, false, false, false, false, false, false, false };
         private bool[] onlineStatus = new bool[3];
         private bool[] oldOnline = new bool[3] { false, false, false };
@@ -374,7 +375,7 @@ namespace MesWarnDaemon
             conn.Close();
         }
 
-        private void AddIOState_Local(bool[] ioState)
+        private void AddIOStateA_Local(bool[] ioState)      // For Rack and Bobbin AMR
         {
             conn.Close();
             conn.Open();
@@ -383,19 +384,76 @@ namespace MesWarnDaemon
 
             string strRecord;
 
-            strRecord = string.Format("INSERT tb_IOState " +
-                "(updated_at,   rf_trigger_run, lc1_loaded,     lc2_loaded, touched,    emergencied,    uam_ossd1," +
-                " uam_ossd3,    fine_tuned,     lc_full,        cyl_upper,  cyl_lower,  brdg_upper,     brdg_lower," +
-                " di_13,        ir_rx2,         red_led,        blue_led,   brdg_fw,    brdg_bw,        charge_on, " +
-                " cyl_fw,       green_led,      rfid_trigger,   buzzer,     cyl_bw,     uam_in_a,       uam_in_b) " +
-                "VALUES (GetDate(), {0},  {1},  {2},  {3},  {4},  {5},  {6},  {7},  {8},  {9}, {10}, {11}, {12}, " +
-                "                  {13}, {14}, {15}, {16}, {17}, {18}, {19}, {20}, {21}, {22}, {23}, {24}, {25}, {26} ) ",
-                ioState[0] ? 1 : 0, ioState[1] ? 1 : 0, ioState[2] ? 1 : 0, ioState[3] ? 1 : 0, ioState[4] ? 1 : 0,
-                ioState[5] ? 1 : 0, ioState[6] ? 1 : 0, ioState[7] ? 1 : 0, ioState[8] ? 1 : 0, ioState[9] ? 1 : 0,
-                ioState[10] ? 1 : 0, ioState[11] ? 1 : 0, ioState[12] ? 1 : 0, ioState[13] ? 1 : 0, ioState[14] ? 1 : 0,
-                ioState[15] ? 1 : 0, ioState[16] ? 1 : 0, ioState[17] ? 1 : 0, ioState[18] ? 1 : 0, ioState[19] ? 1 : 0,
-                ioState[20] ? 1 : 0, ioState[21] ? 1 : 0, ioState[22] ? 1 : 0, ioState[23] ? 1 : 0, ioState[24] ? 1 : 0,
-                ioState[25] ? 1 : 0, ioState[26] ? 1 : 0);
+            strRecord = string.Format("INSERT tb_IOState (inserted_at," +
+                " p01, p02, p03, p04, p05, p06, p07, p08, p09, p10, p11, p12, p13, p14," +
+                " p15, p16, p17, p18, p19, p20, p21, p22, p23, p24, p25, p26," +
+                " p27, p28, p29, p30, p31, p32, p33, p34, p35, p36, p37, p38, p39, p40, p41, p42," +
+                " p43, p44, p45, p46, p47, p48, p49, p50, p51, p52, p53, p54, p55, p56, p57, p58)" +
+                " VALUES (GetDate()," +
+                "  {0},  {1},  {2},  {3},  {4},  {5},  {6},  {7},  {8},  {9}, {10}, {11}, {12}, {13}," +
+                " {14}, {15}, {16}, {17}, {18}, {19}, {20}, {21}, {22}, {23}, {24}, {25}," +
+                " {26}, {27}, {28}, {29}, {30}, {31}, {32}, {33}, {34}, {35}, {36}, {37}, {38}, {39}, {40}, {41}," +
+                " {42}, {43}, {44}, {45}, {46}, {47}, {48}, {49}, {50}, {51}, {52}, {53}, {54}, {55}, {56}, {57})",
+                ioState[0] ? 1 : 0, ioState[1] ? 1 : 0, ioState[2] ? 1 : 0, ioState[3] ? 1 : 0, ioState[4] ? 1 : 0, ioState[5] ? 1 : 0,
+                ioState[6] ? 1 : 0, ioState[7] ? 1 : 0, ioState[8] ? 1 : 0, ioState[9] ? 1 : 0, ioState[10] ? 1 : 0, ioState[11] ? 1 : 0,
+                ioState[12] ? 1 : 0, ioState[13] ? 1 : 0,
+                ioState[14] ? 1 : 0, ioState[15] ? 1 : 0, ioState[16] ? 1 : 0, ioState[17] ? 1 : 0,
+                ioState[18] ? 1 : 0, ioState[19] ? 1 : 0, ioState[20] ? 1 : 0, ioState[21] ? 1 : 0, ioState[22] ? 1 : 0, ioState[23] ? 1 : 0,
+                ioState[24] ? 1 : 0, ioState[25] ? 1 : 0,
+                ioState[26] ? 1 : 0, ioState[27] ? 1 : 0, ioState[28] ? 1 : 0, ioState[29] ? 1 : 0, ioState[30] ? 1 : 0, ioState[31] ? 1 : 0,
+                ioState[32] ? 1 : 0, ioState[33] ? 1 : 0, ioState[34] ? 1 : 0, ioState[35] ? 1 : 0, ioState[36] ? 1 : 0, ioState[37] ? 1 : 0,
+                ioState[38] ? 1 : 0, ioState[39] ? 1 : 0, ioState[40] ? 1 : 0, ioState[41] ? 1 : 0, ioState[42] ? 1 : 0, ioState[43] ? 1 : 0,
+                ioState[44] ? 1 : 0, ioState[45] ? 1 : 0, ioState[46] ? 1 : 0, ioState[47] ? 1 : 0, ioState[48] ? 1 : 0, ioState[49] ? 1 : 0,
+                ioState[50] ? 1 : 0, ioState[51] ? 1 : 0, ioState[52] ? 1 : 0, ioState[53] ? 1 : 0, ioState[54] ? 1 : 0, ioState[55] ? 1 : 0,
+                ioState[56] ? 1 : 0, ioState[57] ? 1 : 0);
+
+            Comm.CommandText = strRecord;
+
+            Comm.ExecuteNonQuery();
+            conn.Close();
+        }
+
+        private void AddIOStateB_Local(bool[] ioState)      // For Spool and Product AMR
+        {
+            conn.Close();
+            conn.Open();
+            SqlCommand Comm = new SqlCommand();
+            Comm.Connection = conn;
+
+            string strRecord;
+
+            strRecord = string.Format("INSERT tb_IOState (inserted_at," +
+                " p01, p02, p03, p04, p05, p06, p07, p08, p09, p10, p11, p12, p13, p14," +
+                " p15, p16, p17, p18, p19, p20, p21, p22, p23, p24, p25, p26," +
+                " p27, p28, p29, p30, p31, p32, p33, p34, p35, p36, p37, p38, p39, p40, p41, p42," +
+                " p43, p44, p45, p46, p47, p48, p49, p50, p51, p52, p53, p54, p55, p56, p57, p58," +
+                " p59, p60, p61, p62, p63, p64, p65, p66, p67, p68, p69, p70, p71, p72, p73, p74," +
+                " p75, p76, p77, p78, p79, p80, p81, p82, p83, p84, p85, p86, p87, p88, p89, p90)" +
+                " VALUES (GetDate()," +
+                "  {0},  {1},  {2},  {3},  {4},  {5},  {6},  {7},  {8},  {9}, {10}, {11}, {12}, {13}," +
+                " {14}, {15}, {16}, {17}, {18}, {19}, {20}, {21}, {22}, {23}, {24}, {25}," +
+                " {26}, {27}, {28}, {29}, {30}, {31}, {32}, {33}, {34}, {35}, {36}, {37}, {38}, {39}, {40}, {41}," +
+                " {42}, {43}, {44}, {45}, {46}, {47}, {48}, {49}, {50}, {51}, {52}, {53}, {54}, {55}, {56}, {57}," +
+                " {58}, {59}, {60}, {61}, {62}, {63}, {64}, {65}, {66}, {67}, {68}, {69}, {70}, {71}, {72}, {73}," +
+                " {74}, {75}, {76}, {77}, {78}, {79}, {80}, {81}, {82}, {83}, {84}, {85}, {86}, {87}, {88}, {89})",
+                ioState[0] ? 1 : 0, ioState[1] ? 1 : 0, ioState[2] ? 1 : 0, ioState[3] ? 1 : 0, ioState[4] ? 1 : 0, ioState[5] ? 1 : 0,
+                ioState[6] ? 1 : 0, ioState[7] ? 1 : 0, ioState[8] ? 1 : 0, ioState[9] ? 1 : 0, ioState[10] ? 1 : 0, ioState[11] ? 1 : 0,
+                ioState[12] ? 1 : 0, ioState[13] ? 1 : 0,
+                ioState[14] ? 1 : 0, ioState[15] ? 1 : 0, ioState[16] ? 1 : 0, ioState[17] ? 1 : 0,
+                ioState[18] ? 1 : 0, ioState[19] ? 1 : 0, ioState[20] ? 1 : 0, ioState[21] ? 1 : 0, ioState[22] ? 1 : 0, ioState[23] ? 1 : 0,
+                ioState[24] ? 1 : 0, ioState[25] ? 1 : 0,
+                ioState[26] ? 1 : 0, ioState[27] ? 1 : 0, ioState[28] ? 1 : 0, ioState[29] ? 1 : 0, ioState[30] ? 1 : 0, ioState[31] ? 1 : 0,
+                ioState[32] ? 1 : 0, ioState[33] ? 1 : 0, ioState[34] ? 1 : 0, ioState[35] ? 1 : 0, ioState[36] ? 1 : 0, ioState[37] ? 1 : 0,
+                ioState[38] ? 1 : 0, ioState[39] ? 1 : 0, ioState[40] ? 1 : 0, ioState[41] ? 1 : 0, ioState[42] ? 1 : 0, ioState[43] ? 1 : 0,
+                ioState[44] ? 1 : 0, ioState[45] ? 1 : 0, ioState[46] ? 1 : 0, ioState[47] ? 1 : 0, ioState[48] ? 1 : 0, ioState[49] ? 1 : 0,
+                ioState[50] ? 1 : 0, ioState[51] ? 1 : 0, ioState[52] ? 1 : 0, ioState[53] ? 1 : 0, ioState[54] ? 1 : 0, ioState[55] ? 1 : 0,
+                ioState[56] ? 1 : 0, ioState[57] ? 1 : 0,
+                ioState[58] ? 1 : 0, ioState[59] ? 1 : 0, ioState[60] ? 1 : 0, ioState[61] ? 1 : 0, ioState[62] ? 1 : 0, ioState[63] ? 1 : 0,
+                ioState[64] ? 1 : 0, ioState[65] ? 1 : 0, ioState[66] ? 1 : 0, ioState[67] ? 1 : 0, ioState[68] ? 1 : 0, ioState[69] ? 1 : 0,
+                ioState[70] ? 1 : 0, ioState[71] ? 1 : 0, ioState[72] ? 1 : 0, ioState[73] ? 1 : 0, ioState[74] ? 1 : 0, ioState[75] ? 1 : 0,
+                ioState[76] ? 1 : 0, ioState[77] ? 1 : 0, ioState[78] ? 1 : 0, ioState[79] ? 1 : 0, ioState[80] ? 1 : 0, ioState[81] ? 1 : 0,
+                ioState[82] ? 1 : 0, ioState[83] ? 1 : 0, ioState[84] ? 1 : 0, ioState[85] ? 1 : 0, ioState[86] ? 1 : 0, ioState[87] ? 1 : 0,
+                ioState[88] ? 1 : 0, ioState[89] ? 1 : 0);
 
             Comm.CommandText = strRecord;
 
@@ -750,10 +808,20 @@ namespace MesWarnDaemon
                     AddRackDetectStatus_Local(rackDetected);
                 }
 
-                if (firstLetter == 'B') // BOBBIN_AMR
+                // IO status
+                if (firstLetter == 'R' || firstLetter == 'B') // RACK and BOBBIN AMR
                 {
-                    ioState = modbusClient.ReadDiscreteInputs(ioStateAddr, 27); // address = 10043
-                    AddIOState_Local(ioState);
+                    ioState = modbusClient.ReadDiscreteInputs(ioStateAddr, 58); // address = 10044 26+32=58
+                    AddIOStateA_Local(ioState);
+                }
+                else if (firstLetter == 'S' || firstLetter == 'P') // SPOOL and PRODUCT AMR
+                {
+                    ioState = modbusClient.ReadDiscreteInputs(ioStateAddr, 90); // address = 10044 26+32+32=90
+                    AddIOStateB_Local(ioState);
+                }
+                else
+                {
+                    System.Windows.MessageBox.Show("AMR 타입을 알 수가 없습니다.", "경고", MessageBoxButton.OK, MessageBoxImage.Warning);
                 }
 
                 // AMR block status
