@@ -958,6 +958,7 @@ namespace MesWarnDaemon
                 modbusClient = new ModbusClient(System.Configuration.ConfigurationManager.AppSettings["ModbusServer"], 502);
                 isFirst = true;
                 //oldBlocked = Enumerable.Repeat(true, 8).ToArray();
+                WriteLog("[" + DateTimeOffset.Now.ToString() + "] [1]SocketException: " + se.Message);
             }
             catch(IOException ex)
             {
@@ -966,6 +967,7 @@ namespace MesWarnDaemon
                 modbusClient = new ModbusClient(System.Configuration.ConfigurationManager.AppSettings["ModbusServer"], 502);
                 isFirst = true;
                 //oldBlocked = Enumerable.Repeat(true, 8).ToArray();
+                WriteLog("[" + DateTimeOffset.Now.ToString() + "] [2]SocketException: " + ex.Message);
             }
             catch (Exception ex)
             {
@@ -973,6 +975,7 @@ namespace MesWarnDaemon
                 //MessageBox.Show("[3]Exception: " + ex.Message);
                 isFirst = true;
                 //oldBlocked = Enumerable.Repeat(true, 8).ToArray();
+                WriteLog("[" + DateTimeOffset.Now.ToString() + "] [3]SocketException: " + ex.Message);
             }
             finally
             {
